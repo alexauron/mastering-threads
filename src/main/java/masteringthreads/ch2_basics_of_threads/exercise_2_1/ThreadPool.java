@@ -3,11 +3,15 @@ package masteringthreads.ch2_basics_of_threads.exercise_2_1;
 import net.jcip.annotations.*;
 
 import java.util.*;
+import java.util.concurrent.locks.*;
 
 public class ThreadPool {
     // Create a LinkedList field containing Runnable. This is our "tasks" queue.
     // Hint: Since LinkedList is not thread-safe, we need to synchronize it.
-    @GuardedBy("tasks")
+    private final Lock tasksLock = new ReentrantLock();
+    private final Condition tasksNotEmpty = tasksLock.newCondition();
+
+    @GuardedBy("tasksLock")
     private final LinkedList<Runnable> tasks = new LinkedList<>();
     // Create an ArrayList containing all the Worker threads.
     // Hint: ArrayList is also not thread-safe, so we need to synchronize it.
@@ -28,26 +32,35 @@ public class ThreadPool {
 
     private Runnable take() throws InterruptedException {
         // if the LinkedList is empty, we wait
-        synchronized (tasks) {
-            while (tasks.isEmpty()) tasks.wait();
+        tasksLock.lock();
+        try {
+            while (tasks.isEmpty()) tasksNotEmpty.await();
             // remove the first task from the LinkedList and return it
             return tasks.removeFirst();
+        } finally {
+            tasksLock.unlock();
         }
     }
 
     public void submit(Runnable task) {
         // Add the task to the LinkedList and notifyAll
-        synchronized (tasks) {
+        tasksLock.lock();
+        try {
             tasks.add(task);
-            tasks.notifyAll();
+            tasksNotEmpty.signal();
+        } finally {
+            tasksLock.unlock();
         }
     }
 
     public int getRunQueueLength() {
         // return the length of the LinkedList
         // remember to also synchronize!
-        synchronized (tasks) {
+        tasksLock.lock();
+        try {
             return tasks.size();
+        } finally {
+            tasksLock.unlock();
         }
     }
 
