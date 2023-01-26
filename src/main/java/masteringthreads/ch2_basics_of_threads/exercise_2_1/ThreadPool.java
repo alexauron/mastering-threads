@@ -31,6 +31,8 @@ public class ThreadPool {
     }
 
     private Runnable take() throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
         // if the LinkedList is empty, we wait
         tasksLock.lock();
         try {
