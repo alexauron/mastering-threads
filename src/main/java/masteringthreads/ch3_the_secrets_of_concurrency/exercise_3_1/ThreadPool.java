@@ -9,6 +9,7 @@ public class ThreadPool {
     // Create an ArrayList containing all the Worker threads.
     // @GuardedBy("workers")
     private final Collection<Worker> workers = new ArrayList<>();
+    private volatile boolean running = true;
 
     public ThreadPool(int poolSize) {
         for (int i = 0; i < poolSize; i++) {
@@ -21,6 +22,8 @@ public class ThreadPool {
     }
 
     private Runnable take() throws InterruptedException {
+        if (Thread.interrupted())
+            throw new InterruptedException();
         synchronized (tasks) {
             // if the LinkedList is empty, we wait
             while (tasks.isEmpty()) tasks.wait();
@@ -48,8 +51,9 @@ public class ThreadPool {
     @SuppressWarnings("deprecation")
     public void shutdown() {
         // this should call interrupt() on the worker threads.
+        running = false;
         synchronized (workers) {
-            workers.forEach(Thread::stop);
+            workers.forEach(Thread::interrupt);
         }
     }
 
@@ -60,13 +64,13 @@ public class ThreadPool {
 
         public void run() {
             // we run in an infinite loop:
-            while(true) {
+            while (running) {
                 // remove the next task from the linked list using take()
                 // we then call the run() method on the job
                 try {
                     take().run();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    break;
                 }
             }
         }
