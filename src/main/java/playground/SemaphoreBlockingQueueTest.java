@@ -11,28 +11,27 @@ public class SemaphoreBlockingQueueTest {
             }
         }
         var bouncer = new ArrayBlockingQueue<WhoAmI>(25);
-        var pool = Executors.newCachedThreadPool();
-        for (int i = 0; i < 100; i++) {
-            pool.execute(() -> {
-                try {
-                    var whoAmI = new WhoAmI();
-                    bouncer.put(whoAmI);
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new CancellationException("interrupted");
-                    } finally {
-                        bouncer.remove(whoAmI);
-                    }
-                } catch (InterruptedException e) {
-                    throw new CancellationException("interrupted");
-                }
-            });
-        }
         ScheduledExecutorService timer = Executors.newSingleThreadScheduledExecutor();
         timer.scheduleAtFixedRate(() -> System.out.println(bouncer), 500, 1000, TimeUnit.MILLISECONDS);
-        pool.shutdown();
-        pool.awaitTermination(10, TimeUnit.SECONDS);
+        try (var pool = Executors.newCachedThreadPool()) {
+            for (int i = 0; i < 100; i++) {
+                pool.execute(() -> {
+                    try {
+                        var whoAmI = new WhoAmI();
+                        bouncer.put(whoAmI);
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            throw new CancellationException("interrupted");
+                        } finally {
+                            bouncer.remove(whoAmI);
+                        }
+                    } catch (InterruptedException e) {
+                        throw new CancellationException("interrupted");
+                    }
+                });
+            }
+        }
         time = System.currentTimeMillis() - time;
         System.out.println(time + "ms");
         timer.shutdown();
