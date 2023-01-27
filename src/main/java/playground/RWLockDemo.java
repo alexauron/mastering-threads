@@ -8,6 +8,7 @@ import java.util.concurrent.locks.*;
 public class RWLockDemo {
     public static void main(String... args) {
         List<IDNumberProviders> providers = List.of(
+                new IDNumberProvidersReentrantLockFair(),
                 new IDNumberProvidersSynchronized(),
                 new IDNumberProvidersReentrantLock(),
                 new IDNumberProvidersReentrantReadWriteLock()
