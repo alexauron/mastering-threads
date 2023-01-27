@@ -9,13 +9,6 @@ public class ThreadLocalContextHolder {
     private ThreadLocalContextHolder() {
     }
 
-//  public static void put(String key) {
-//    if (THREAD_WITH_TCONTEXT.get() == null) {
-//      THREAD_WITH_TCONTEXT.set(key);
-//    }
-//    THREAD_WITH_TCONTEXT.get();
-//  }
-
     public static void put(Map key) {
         if (THREAD_WITH_TCONTEXT.get() == null) {
             THREAD_WITH_TCONTEXT.set(key);

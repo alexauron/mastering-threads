@@ -30,8 +30,8 @@ package masteringthreads.ch5_threading_problems.exercise_5_2;
 
 public class ProcessTaskCaller {
     public static void main(String... args) {
-        ProcessTaskManager ptm = new ProcessTaskManager();
         for (int i = 0; i < 2000; i++) {
+            ProcessTaskManager ptm = new ProcessTaskManager();
             Thread t = new Thread(ptm);
             t.setName(String.valueOf(i));
             t.start();
